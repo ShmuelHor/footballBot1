@@ -6,7 +6,7 @@ from typing import List
 load_dotenv()
 
 TELEGRAM_API_TOKEN = os.getenv('TELEGRAM_API_TOKEN')
-FOOTBALL_API_KEY = os.getenv('FOOTBALL_API_KEY')
+FOOTBALL_API_KEY = os.getenv('FOOTBALL_DATA_TOKEN')  # שינוי לטוקן החדש
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 TEAM_IDS_RAW = os.getenv('TEAM_IDS', '86')
 

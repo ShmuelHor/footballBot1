@@ -17,20 +17,22 @@ class FootballScheduler:
         self.tz = ZoneInfo(config.TIMEZONE)
 
     def start(self):
-        # Daily matches 09:00
-        self.scheduler.add_job(self.job_today, CronTrigger(day_of_week='mon-sun', hour=9, minute=52, timezone=self.tz))
+        # Daily matches 09:00 בבוקר כל יום
+        self.scheduler.add_job(self.job_today, CronTrigger(day_of_week='mon-sun', hour=12, minute=42, timezone=self.tz))
         # Weekly summary Sunday 09:00
-        self.scheduler.add_job(self.job_week, CronTrigger(day_of_week='sun', hour=9, minute=52, timezone=self.tz))
+        self.scheduler.add_job(self.job_week, CronTrigger(day_of_week='sun', hour=9, minute=5, timezone=self.tz))
         self.scheduler.start()
         logger.info("Scheduler started")
 
     async def job_today(self):
-        today = datetime.now(self.tz).strftime('%Y-%m-%d')
-        msg = await self.api.build_message(today, today, config.TEAM_IDS, daily=True)
+        # שליחת כל המשחקים של היום מקובצים לפי ליגות
+        logger.info("Starting daily matches job at 9:00 AM")
+        msg = await self.api.build_daily_matches_message()
         if msg:
             await send_message(msg)
+            logger.info("Daily matches message sent successfully")
         else:
-            logger.info("No matches today")
+            logger.info("No matches today - no message sent")
 
     async def job_week(self):
         now = datetime.now(self.tz)

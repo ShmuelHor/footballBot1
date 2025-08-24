@@ -9,7 +9,12 @@ bot = Bot(token=config.TELEGRAM_API_TOKEN)
 
 async def send_message(text: str) -> bool:
     try:
-        await bot.send_message(chat_id=config.TELEGRAM_CHAT_ID, text=text)
+        await bot.send_message(
+            chat_id=config.TELEGRAM_CHAT_ID,
+            text=text,
+            parse_mode='Markdown',
+            disable_web_page_preview=False
+        )
         logger.info("Telegram message sent")
         return True
     except Exception as e:

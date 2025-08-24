@@ -18,7 +18,7 @@ class FootballScheduler:
 
     def start(self):
         # Daily matches 09:00 בבוקר כל יום
-        self.scheduler.add_job(self.job_today, CronTrigger(day_of_week='mon-sun', hour=12, minute=42, timezone=self.tz))
+        self.scheduler.add_job(self.job_today, CronTrigger(day_of_week='mon-sun', hour=9, minute=0, timezone=self.tz))
         # Weekly summary Sunday 09:00
         self.scheduler.add_job(self.job_week, CronTrigger(day_of_week='sun', hour=9, minute=5, timezone=self.tz))
         self.scheduler.start()

@@ -133,9 +133,14 @@ class FootballAPI:
             return utc_iso
 
     def format_match_english(self, match: Dict) -> str:
-        """פורמט חדש למשחק באנגלית עם סמלים"""
+        """פורמט חדש למשחק באנגלית עם סמלים וסמלי קבוצות"""
         home_team = match.get('homeTeam', {}).get('shortName', 'Unknown')
         away_team = match.get('awayTeam', {}).get('shortName', 'Unknown')
+
+        # קישורים לסמלי הקבוצות
+        home_crest = match.get('homeTeam', {}).get('crest', '')
+        away_crest = match.get('awayTeam', {}).get('crest', '')
+
         utc_date = match.get('utcDate', '')
         status = match.get('status', 'UNKNOWN')
 
@@ -143,20 +148,26 @@ class FootballAPI:
         local_time = self.utc_to_local(utc_date)
         time_part = local_time.split(' ')[1] if ' ' in local_time else utc_date
 
+        # בניית שמות הקבוצות עם סמלים כקישורים
+        home_display = f"[{home_team}]({home_crest})" if home_crest else home_team
+        away_display = f"[{away_team}]({away_crest})" if away_crest else away_team
+
         # פורמט שונה לפי סטטוס המשחק
         if status == "FINISHED":
             score = match.get('score', {}).get('fullTime', {})
             home_score = score.get('home', 0)
             away_score = score.get('away', 0)
-            return f"⚽ {home_team} {home_score}-{away_score} {away_team} (FINISHED)"
+            return f"    ⚽ {home_display} `{home_score}-{away_score}` {away_display} ✅"
         elif status == "TIMED":
-            return f"🕐 {time_part} | {home_team} vs {away_team}"
+            return f"    🕐 `{time_part}` │ {home_display} **VS** {away_display}"
         elif status == "IN_PLAY":
-            return f"🔴 LIVE | {home_team} vs {away_team}"
+            return f"    🔴 **LIVE** │ {home_display} **VS** {away_display}"
         elif status == "HALFTIME":
-            return f"⏸️ HT | {home_team} vs {away_team}"
+            return f"    ⏸️ **HALF TIME** │ {home_display} **VS** {away_display}"
+        elif status == "PAUSED":
+            return f"    ⏸️ **PAUSED** │ {home_display} **VS** {away_display}"
         else:
-            return f"📅 {home_team} vs {away_team} ({status})"
+            return f"    📅 {home_display} **VS** {away_display} `({status})`"
 
     def group_matches_by_league(self, matches: List[Dict]) -> Dict[str, List[Dict]]:
         """קיבוץ משחקים לפי ליגות"""
@@ -224,8 +235,13 @@ class FootballAPI:
         leagues = self.group_matches_by_league(matches)
 
         # בניית ההודעה
-        today = datetime.now(self.tz).strftime('%d/%m/%Y')
-        message_parts = [f"⚽ **Today's Football Matches - {today}**\n"]
+        today = datetime.now(self.tz).strftime('%A, %d/%m/%Y')
+        message_parts = [
+            "⚽🏆 **TODAY'S FOOTBALL MATCHES** 🏆⚽",
+            f"📅 *{today}* │ 🇮🇱 Israel Time",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            ""
+        ]
 
         # מיון הליגות לפי עדיפות
         league_priority = {
@@ -242,17 +258,32 @@ class FootballAPI:
         sorted_leagues = sorted(leagues.items(),
                               key=lambda x: league_priority.get(x[0], 99))
 
-        for league_name, league_matches in sorted_leagues:
+        for i, (league_name, league_matches) in enumerate(sorted_leagues):
             # הוספת אייקון מותאם לליגה
             league_icon = self.get_league_icon(league_name)
-            message_parts.append(f"\n{league_icon} **{league_name}**")
+
+            # קו מפריד בין ליגות (לא לליגה הראשונה)
+            if i > 0:
+                message_parts.append("┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈")
+
+            message_parts.append(f"{league_icon} **{league_name}** `({len(league_matches)} matches)`")
 
             for match in league_matches:
-                message_parts.append(f"   {self.format_match_english(match)}")
+                message_parts.append(self.format_match_english(match))
 
-        message_parts.append(f"\n📊 **Summary:**")
-        message_parts.append(f"🏟️ Total matches: {len(matches)}")
-        message_parts.append(f"🏆 Leagues: {len(leagues)}")
+            # רווח אחרי כל ליגה
+            message_parts.append("")
+
+        # סיכום
+        message_parts.extend([
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "📊 **SUMMARY:**",
+            f"🏟️ Total matches: `{len(matches)}`",
+            f"🏆 Leagues: `{len(leagues)}`",
+            f"⏰ Updated: `{datetime.now(self.tz).strftime('%H:%M')}`",
+            "",
+            "🔔 *Next update tomorrow at 09:00*"
+        ])
 
         return "\n".join(message_parts)
 

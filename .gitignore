@@ -1,0 +1,21 @@
+# Environment
+.env
+.env.*
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env.local/
+
+# Logs
+*.log
+
+# OS / Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
